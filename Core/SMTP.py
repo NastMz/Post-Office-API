@@ -1,8 +1,9 @@
-import datetime
+import imaplib
 import smtplib
+import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from Config.Config import HOST, SMTP_PORT
+from Config.Config import HOST, SMTP_PORT, IMAP_PORT
 
 
 class SMTP:
@@ -13,7 +14,7 @@ class SMTP:
         msg['From'] = from_email
         msg['To'] = ", ".join(to_emails)
         msg['Subject'] = subject
-        msg['Date'] = datetime.datetime.now().date().strftime("%m/%d/%Y")
+        msg['Date'] = imaplib.Time2Internaldate(time.time())
 
         txt_part = MIMEText(text, 'utf-8')
         msg.attach(txt_part)
@@ -30,6 +31,13 @@ class SMTP:
         server.login(from_email, password)
         server.sendmail(from_email, to_emails, msg_str)
         server.quit()
+
+        # save sent email
+        mail = imaplib.IMAP4(host=HOST, port=IMAP_PORT)
+        mail.login(from_email, password)
+        mail.append(mailbox='INBOX', flags='Sent', date_time=imaplib.Time2Internaldate(time.time()), message=msg_str.encode('utf8'))
+        mail.logout()
+
 
 #
 # send_email(text='This is an email from python', subject='Email from python', from_email=user_email,

@@ -12,7 +12,7 @@ class IMAP:
     def get_inbox(self, user_email=None, user_password=None):
         mail = imaplib.IMAP4(host=HOST, port=IMAP_PORT)
         mail.login(user_email, user_password)
-        mail.select("inbox", readonly=True)
+        mail.select("INBOX", readonly=True)
 
         _, search_data = mail.search(None, 'ALL')
 
@@ -74,6 +74,8 @@ class IMAP:
             email_flags['read'] = False
         if "Inbox" in str(flags):
             email_flags['context'] = 'inbox'
+        if "Sent" in str(flags):
+            email_flags['context'] = 'send'
         if "Important" in str(flags):
             email_flags['important'] = True
         else:
@@ -84,13 +86,13 @@ class IMAP:
             email_flags['archive'] = False
         return email_flags
 
-    def add_flags(self, uid, user_email, user_password, context=None):
+    def add_flags(self, uid, user_email, user_password, context=None, box='INBOX'):
         mail = imaplib.IMAP4(host=HOST, port=IMAP_PORT)
         mail.login(user_email, user_password)
-        mail.select('INBOX')
+        mail.select(box)
 
         # add the flags to the message
-        if 'Inbox' in context:
+        if box == 'INBOX':
             mail.store(uid, '+FLAGS', "Inbox")
         if 'Archive' in context:
             mail.store(uid, '+FLAGS', "Archive")

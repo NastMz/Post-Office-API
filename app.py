@@ -13,9 +13,9 @@ def inbox():
     u_password = request.json['pass']
     mails = imap.get_inbox(u_email, u_password)
     if len(mails) > 0:
-        return jsonify({"inbox": mails})
+        return jsonify({"emails": mails})
     else:
-        return jsonify({"message": "Invalid email!"})
+        return jsonify({"message": "Inbox is empty"})
 
 
 @app.route('/send', methods=['POST'])
