@@ -9,7 +9,7 @@ from Utils.JWT import token_required, validate_token
 app = Flask(__name__)
 
 
-@app.route('/inbox', methods=['GET'])
+@app.route('/api/inbox', methods=['GET'])
 @token_required
 def inbox(data):
     imap = IMAP()
@@ -22,7 +22,7 @@ def inbox(data):
         return jsonify({"message": "Inbox is empty"})
 
 
-@app.route('/send', methods=['POST'])
+@app.route('/api/send', methods=['POST'])
 @token_required
 def send(data):
     smtp = SMTP()
@@ -41,7 +41,7 @@ def send(data):
     return jsonify({"message": "Email sent successfully!"})
 
 
-@app.route('/delete', methods=['POST'])
+@app.route('/api/delete', methods=['POST'])
 @token_required
 def delete(data):
     imap = IMAP()
@@ -52,7 +52,7 @@ def delete(data):
     return jsonify({"message": "Email delete successfully!"})
 
 
-@app.route('/archive', methods=['POST'])
+@app.route('/api/archive', methods=['POST'])
 @token_required
 def mark_as_archived(data):
     imap = IMAP()
@@ -63,7 +63,7 @@ def mark_as_archived(data):
     return jsonify({"message": "Email archived successfully!"})
 
 
-@app.route('/important', methods=['POST'])
+@app.route('/api/important', methods=['POST'])
 @token_required
 def mark_as_important(data):
     imap = IMAP()
@@ -74,20 +74,20 @@ def mark_as_important(data):
     return jsonify({"message": "Email marked as important successfully!"})
 
 
-@app.route('/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def login():
     _login = Login()
     return jsonify(_login.verify_crendentials(request.json['email'], request.json['pass']))
 
 
-@app.route('/register', methods=['POST'])
+@app.route('/api/register', methods=['POST'])
 def register():
     _register = Register()
     return jsonify(
         {"message": _register.register_user(request.json['email'], request.json['pass'], request.json['fname'])})
 
 
-@app.route('/validate', methods=['GET'])
+@app.route('/api/validate', methods=['GET'])
 def validate():
     token = request.headers['Authorization']
     token = token.replace("Bearer ", "")
