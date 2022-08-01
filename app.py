@@ -2,6 +2,8 @@ from flask import Flask, jsonify, request
 
 from Core.IMAP import IMAP
 from Core.SMTP import SMTP
+from Core.login import Login
+from Core.register import Register
 
 app = Flask(__name__)
 
@@ -36,6 +38,7 @@ def send():
     return jsonify({"message": "Email sent successfully!"})
 
 
+
 @app.route('/delete', methods=['POST'])
 def delete():
     imap = IMAP()
@@ -65,6 +68,16 @@ def mark_as_important():
     imap.add_flags(uid, u_email, u_password, context=['Important'])
     return jsonify({"message": "Email marked as important successfully!"})
 
+@app.route('/login', methods=['POST'])
+def login():
+    login = Login()
+    return jsonify({"message": login.verify_crendentials(request.json['email'], request.json['pass'])})
+
+@app.route('/register', methods=['POST'])
+def register():
+    register = Register()
+    return jsonify({"message": register.register_user(request.json['email'], request.json['pass'], request.json['fname'])})
+    
 
 if __name__ == '__main__':
     app.run(debug=True, port=4000)
