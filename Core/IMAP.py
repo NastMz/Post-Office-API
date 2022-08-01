@@ -4,9 +4,6 @@ import email
 from Config.Config import HOST, IMAP_PORT
 from Database.Connection import DAO
 
-u_email = 'test1@massmail.site'
-u_password = 'test1'
-
 
 class IMAP:
     def __init__(self):
@@ -61,10 +58,3 @@ class IMAP:
         username = username.replace("'", "")
         username = username.replace(",", "")
         return username
-
-
-imap = IMAP()
-mails = imap.get_inbox(user_email=u_email, user_password=u_password)
-
-for email in mails:
-    print(email)
