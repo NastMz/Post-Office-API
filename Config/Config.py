@@ -2,3 +2,8 @@
 HOST = '192.168.0.106'
 IMAP_PORT = 143
 SMTP_PORT = 25
+DB_PORT = 3306
+DB_NAME = "maildb"
+DB_USER = "mailuser"
+DB_PASS = "mailPWD"
+DB_CHARSET = "latin1"

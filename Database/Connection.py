@@ -1,7 +1,7 @@
 import mysql.connector
 from mysql.connector import Error
 
-from Config.Config import HOST
+from Config.Config import HOST, DB_PORT, DB_CHARSET, DB_NAME, DB_PASS, DB_USER
 
 
 class DAO:
@@ -9,11 +9,11 @@ class DAO:
         try:
             self.connection = mysql.connector.connect(
                 host=HOST,
-                port=3306,
-                user='mailuser',
-                password='mailPWD',
-                db='maildb',
-                charset='latin1',
+                port=DB_PORT,
+                user=DB_USER,
+                password=DB_PASS,
+                db=DB_NAME,
+                charset=DB_CHARSET,
             )
         except Error as ex:
             print("Error on try connect: {0}".format(ex))
