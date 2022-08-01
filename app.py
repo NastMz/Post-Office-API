@@ -9,8 +9,8 @@ app = Flask(__name__)
 @app.route('/inbox', methods=['GET'])
 def inbox():
     imap = IMAP()
-    u_email = 'test2@massmail.site'
-    u_password = 'test2'
+    u_email = request.json['email']
+    u_password = request.json['pass']
     mails = imap.get_inbox(u_email, u_password)
     if len(mails) > 0:
         return jsonify({"inbox": mails})
