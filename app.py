@@ -15,9 +15,9 @@ def inbox():
     u_password = request.json['pass']
     mails = imap.get_inbox(u_email, u_password)
     if len(mails) > 0:
-        return jsonify({"inbox": mails})
+        return jsonify({"emails": mails})
     else:
-        return jsonify({"message": "Invalid email!"})
+        return jsonify({"message": "Inbox is empty"})
 
 
 @app.route('/send', methods=['POST'])
@@ -38,6 +38,36 @@ def send():
     return jsonify({"message": "Email sent successfully!"})
 
 
+
+@app.route('/delete', methods=['POST'])
+def delete():
+    imap = IMAP()
+    u_email = request.json['email']
+    u_password = request.json['pass']
+    uid = request.json['index']
+    imap.delete_email(uid, u_email, u_password)
+    return jsonify({"message": "Email delete successfully!"})
+
+
+@app.route('/archive', methods=['POST'])
+def mark_as_archived():
+    imap = IMAP()
+    u_email = request.json['email']
+    u_password = request.json['pass']
+    uid = request.json['index']
+    imap.add_flags(uid, u_email, u_password, context=['Archive'])
+    return jsonify({"message": "Email archived successfully!"})
+
+
+@app.route('/important', methods=['POST'])
+def mark_as_important():
+    imap = IMAP()
+    u_email = request.json['email']
+    u_password = request.json['pass']
+    uid = request.json['index']
+    imap.add_flags(uid, u_email, u_password, context=['Important'])
+    return jsonify({"message": "Email marked as important successfully!"})
+
 @app.route('/login', methods=['POST'])
 def login():
     login = Login()
@@ -47,6 +77,7 @@ def login():
 def register():
     register = Register()
     return jsonify({"message": register.register_user(request.json['email'], request.json['pass'], request.json['fname'])})
+    
 
 if __name__ == '__main__':
     app.run(debug=True, port=4000)
