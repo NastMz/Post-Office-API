@@ -44,10 +44,10 @@ class IMAP:
             for part in email_messages.walk():
                 if part.get_content_type() == "text/utf-8" or part.get_content_type() == "text/plain":
                     body = part.get_payload(decode=True)
-                    email_data['body'] = body.decode()
+                    email_data['message'] = body.decode()
                 elif part.get_content_type() == "text/html":
                     html_body = part.get_payload(decode=True)
-                    email_data['body'] = html_body.decode()
+                    email_data['message'] = html_body.decode()
             email_data['name'] = self.get_user_name(email_data['from'])
             messages.append(email_data)
 
