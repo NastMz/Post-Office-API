@@ -36,5 +36,35 @@ def send():
     return jsonify({"message": "Email sent successfully!"})
 
 
+@app.route('/delete', methods=['POST'])
+def delete():
+    imap = IMAP()
+    u_email = request.json['email']
+    u_password = request.json['pass']
+    uid = request.json['index']
+    imap.delete_email(uid, u_email, u_password)
+    return jsonify({"message": "Email delete successfully!"})
+
+
+@app.route('/archive', methods=['POST'])
+def mark_as_archived():
+    imap = IMAP()
+    u_email = request.json['email']
+    u_password = request.json['pass']
+    uid = request.json['index']
+    imap.add_flags(uid, u_email, u_password, context=['Archive'])
+    return jsonify({"message": "Email archived successfully!"})
+
+
+@app.route('/important', methods=['POST'])
+def mark_as_important():
+    imap = IMAP()
+    u_email = request.json['email']
+    u_password = request.json['pass']
+    uid = request.json['index']
+    imap.add_flags(uid, u_email, u_password, context=['Important'])
+    return jsonify({"message": "Email marked as important successfully!"})
+
+
 if __name__ == '__main__':
     app.run(debug=True, port=4000)
