@@ -37,8 +37,3 @@ class SMTP:
         mail.login(from_email, password)
         mail.append(mailbox='INBOX', flags='Sent', date_time=imaplib.Time2Internaldate(time.time()), message=msg_str.encode('utf8'))
         mail.logout()
-
-
-#
-# send_email(text='This is an email from python', subject='Email from python', from_email=user_email,
-#            to_emails=['test1@massmail.site'])

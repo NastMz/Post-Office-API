@@ -1,5 +1,5 @@
 # HOST = '3.86.103.183'
-HOST = '192.168.1.3'
+HOST = '192.168.0.106'
 IMAP_PORT = 143
 SMTP_PORT = 25
 DB_PORT = 3306
@@ -7,3 +7,4 @@ DB_NAME = "maildb"
 DB_USER = "mailuser"
 DB_PASS = "mailPWD"
 DB_CHARSET = "latin1"
+KEY = 'super-secret'

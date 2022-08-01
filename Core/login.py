@@ -1,7 +1,11 @@
 import base64
 import binascii
+import datetime
 import hashlib
 
+import jwt
+
+from Config.Config import KEY
 from Database.Connection import DAO
 
 
@@ -11,7 +15,7 @@ class Login:
 
     def verify_crendentials(self, user_email, user_password):
         exist_mail = self.dao.get_email(user_email)
-        status = "Fail"
+        status = {"message": "Credenciales invalidas!"}
         if exist_mail:
             user = self.dao.get_credential(user_email)
             if len(user) > 0:
@@ -19,9 +23,11 @@ class Login:
                 encrypted_pass = base64.b64encode(binascii.unhexlify(encrypted_pass)).decode()
                 user_pass = user[0][2].replace("\n", "")
                 if encrypted_pass == user_pass:
-                    status = "Credenciales correctas, ingresando a MassMail..."
+                    payload = {"email": user_email, "pass": user_password}
+                    token = jwt.encode(payload, KEY, algorithm="HS256")
+                    status = {"token": token}
             else:
-                status = "No puede dejar el campo vacio."
+                status = {"message": "No puede dejar el campo vacio."}
         else:
-            status = "Correo no existe, pruebe con otro correo."
+            status = {"message": "Correo no existe, pruebe con otro correo."}
         return status
