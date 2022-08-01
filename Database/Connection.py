@@ -52,8 +52,19 @@ class DAO:
         if self.connection.is_connected():
             try:
                 cursor = self.connection.cursor()
-                cursor.execute(f"INSERT INTO virtual_Users (domain_name,email,password,fullname,department) VALUES ('massmail.site','{new_email}',TO_BASE64(UNHEX(SHA2('{new_pass}', 512))),'{user_fname}','User')")
+                cursor.execute(
+                    f"INSERT INTO virtual_Users (domain_name,email,password,fullname,department) VALUES ('massmail.site','{new_email}',TO_BASE64(UNHEX(SHA2('{new_pass}', 512))),'{user_fname}','User')")
                 self.connection.commit()
+                result = cursor.fetchall()
+                return result
+            except Error as ex:
+                print("Error on try connect: {0}".format(ex))
+
+    def get_users(self):
+        if self.connection.is_connected():
+            try:
+                cursor = self.connection.cursor()
+                cursor.execute(f"SELECT fullname, email FROM virtual_Users")
                 result = cursor.fetchall()
                 return result
             except Error as ex:

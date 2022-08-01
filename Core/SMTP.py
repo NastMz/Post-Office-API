@@ -1,4 +1,6 @@
+import datetime
 import imaplib
+import locale
 import smtplib
 import time
 from email.mime.text import MIMEText
@@ -14,7 +16,8 @@ class SMTP:
         msg['From'] = from_email
         msg['To'] = ", ".join(to_emails)
         msg['Subject'] = subject
-        msg['Date'] = imaplib.Time2Internaldate(time.time())
+        locale.setlocale(locale.LC_ALL, 'es-ES')
+        msg['Date'] = datetime.date.today().strftime("%A, %d de %B de %Y")
 
         txt_part = MIMEText(text, 'utf-8')
         msg.attach(txt_part)

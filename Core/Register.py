@@ -49,3 +49,4 @@ class Register:
                 message.append('El correo ya se encuentra registrado.')
         return message
 
+

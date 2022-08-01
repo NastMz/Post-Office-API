@@ -1,12 +1,15 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 
 from Core.IMAP import IMAP
 from Core.SMTP import SMTP
-from Core.login import Login
-from Core.register import Register
+from Core.Login import Login
+from Core.Register import Register
+from Database.Users import Users
 from Utils.JWT import token_required, validate_token
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route('/api/inbox', methods=['GET'])
@@ -27,7 +30,7 @@ def inbox(data):
 def send(data):
     smtp = SMTP()
     new_email = {
-        "from": request.json['from'],
+        "from": data['email'],
         "to": request.json['to'],
         "subject": request.json['subject'],
         "text": request.json['text'],
@@ -72,6 +75,13 @@ def mark_as_important(data):
     uid = request.json['index']
     imap.add_flags(uid, u_email, u_password, context=['Important'])
     return jsonify({"message": "Email marked as important successfully!"})
+
+
+@app.route('/api/users', methods=['GET'])
+@token_required
+def users(data):
+    u = Users()
+    return jsonify({"users": u.get_users()})
 
 
 @app.route('/api/login', methods=['POST'])

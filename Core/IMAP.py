@@ -1,5 +1,7 @@
 import imaplib
 import email
+import locale
+from datetime import datetime
 
 from Config.Config import HOST, IMAP_PORT
 from Database.Connection import DAO
@@ -48,7 +50,10 @@ class IMAP:
                 elif part.get_content_type() == "text/html":
                     html_body = part.get_payload(decode=True)
                     email_data['message'] = html_body.decode()
-            email_data['name'] = self.get_user_name(email_data['from'])
+            if email_flags['context'] == 'send':
+                email_data['name'] = self.get_user_name(email_data['to'])
+            else:
+                email_data['name'] = self.get_user_name(email_data['from'])
             messages.append(email_data)
 
         mail.close()
