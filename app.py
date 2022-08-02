@@ -15,10 +15,9 @@ CORS(app)
 @app.route('/api/inbox', methods=['GET'])
 @token_required
 def inbox(data):
-    imap = IMAP()
-    u_email = data['email']
-    u_password = data['pass']
-    mails = imap.get_inbox(u_email, u_password)
+    imap = IMAP(data['email'], data['pass'])
+    mails = imap.get_inbox()
+    imap.close()
     if len(mails) > 0:
         return jsonify({"emails": mails})
     else:
@@ -47,33 +46,30 @@ def send(data):
 @app.route('/api/delete', methods=['POST'])
 @token_required
 def delete(data):
-    imap = IMAP()
-    u_email = data['email']
-    u_password = data['pass']
+    imap = IMAP(data['email'], data['pass'])
     uid = request.json['index']
-    imap.delete_email(uid, u_email, u_password)
+    imap.delete_email(uid)
+    imap.close()
     return jsonify({"message": "Email delete successfully!"})
 
 
 @app.route('/api/archive', methods=['POST'])
 @token_required
 def mark_as_archived(data):
-    imap = IMAP()
-    u_email = data['email']
-    u_password = data['pass']
+    imap = IMAP(data['email'], data['pass'])
     uid = request.json['index']
-    imap.add_flags(uid, u_email, u_password, context=['Archive'])
+    imap.add_flags(uid, context=['Archive'])
+    imap.close()
     return jsonify({"message": "Email archived successfully!"})
 
 
 @app.route('/api/important', methods=['POST'])
 @token_required
 def mark_as_important(data):
-    imap = IMAP()
-    u_email = data['email']
-    u_password = data['pass']
+    imap = IMAP(data['email'], data['pass'])
     uid = request.json['index']
-    imap.add_flags(uid, u_email, u_password, context=['Important'])
+    imap.add_flags(uid, context=['Important'])
+    imap.close()
     return jsonify({"message": "Email marked as important successfully!"})
 
 
