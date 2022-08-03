@@ -27,7 +27,7 @@ class Login:
                     token = jwt.encode(payload, KEY, algorithm="HS256")
                     status = {"token": token}
             else:
-                status = {"message": "No puede dejar el campo vacio."}
+                status = {"message": "No puede dejar campos vacios."}
         else:
             status = {"message": "Correo no existe, pruebe con otro correo."}
         return status
