@@ -43,7 +43,7 @@ def send(data):
     return jsonify({"message": "Email sent successfully!"})
 
 
-@app.route('/api/delete', methods=['POST'])
+@app.route('/api/delete', methods=['DELETE'])
 @token_required
 def delete(data):
     imap = IMAP(data['email'], data['pass'])
@@ -53,7 +53,7 @@ def delete(data):
     return jsonify({"message": "Email delete successfully!"})
 
 
-@app.route('/api/archive', methods=['POST'])
+@app.route('/api/archive', methods=['PUT'])
 @token_required
 def mark_as_archived(data):
     imap = IMAP(data['email'], data['pass'])
@@ -63,7 +63,7 @@ def mark_as_archived(data):
     return jsonify({"message": "Email archived successfully!"})
 
 
-@app.route('/api/important', methods=['POST'])
+@app.route('/api/important', methods=['PUT'])
 @token_required
 def mark_as_important(data):
     imap = IMAP(data['email'], data['pass'])
@@ -71,6 +71,46 @@ def mark_as_important(data):
     imap.add_flags(uid, context=['Important'])
     imap.close()
     return jsonify({"message": "Email marked as important successfully!"})
+
+
+@app.route('/api/read', methods=['PUT'])
+@token_required
+def mark_as_read(data):
+    imap = IMAP(data['email'], data['pass'])
+    uid = request.json['index']
+    imap.add_flags(uid, context=['Read'])
+    imap.close()
+    return jsonify({"message": "Email marked as read successfully!"})
+
+
+@app.route('/api/unmark/archive', methods=['PUT'])
+@token_required
+def unmark_as_archived(data):
+    imap = IMAP(data['email'], data['pass'])
+    uid = request.json['index']
+    imap.remove_flags(uid, context=['Archive'])
+    imap.close()
+    return jsonify({"message": "Email unarchived successfully!"})
+
+
+@app.route('/api/unmark/important', methods=['PUT'])
+@token_required
+def unmark_as_important(data):
+    imap = IMAP(data['email'], data['pass'])
+    uid = request.json['index']
+    imap.remove_flags(uid, context=['Important'])
+    imap.close()
+    return jsonify({"message": "Email unmarked as important successfully!"})
+
+
+@app.route('/api/unmark/read', methods=['PUT'])
+@token_required
+def unmark_as_read(data):
+    imap = IMAP(data['email'], data['pass'])
+    uid = request.json['index']
+    imap.remove_flags(uid, context=['Read'])
+    imap.close()
+    return jsonify({"message": "Email unmarked as read successfully!"})
 
 
 @app.route('/api/users', methods=['GET'])

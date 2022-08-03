@@ -95,6 +95,18 @@ class IMAP:
             self.mail.store(uid, '+FLAGS', "Archive")
         if 'Important' in context:
             self.mail.store(uid, '+FLAGS', "Important")
+        if 'Read' in context:
+            self.mail.store(uid, '+FLAGS', "\\Seen")
+
+    def remove_flags(self, uid, context=None):
+        self.mail.select("INBOX")
+
+        if 'Archive' in context:
+            self.mail.store(uid, '-FLAGS', "Archive")
+        if 'Important' in context:
+            self.mail.store(uid, '-FLAGS', "Important")
+        if 'Read' in context:
+            self.mail.store(uid, '-FLAGS', "\\Seen")
 
     def delete_email(self, uid):
         self.mail.select("INBOX")
