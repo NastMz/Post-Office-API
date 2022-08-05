@@ -31,11 +31,11 @@ def token_required(f):
     return decorator
 
 
-def validate_token(token):
+def get_payload(token):
     try:
-        jwt.decode(token, KEY, algorithms="HS256")
+        data = jwt.decode(token, KEY, algorithms="HS256")
     except jwt.ExpiredSignatureError:
         return jsonify({'message': 'Signature has expired'})
     except jwt.InvalidTokenError:
         return jsonify({'message': 'Invalid token'})
-    return jsonify({'message': 'Valid token'})
+    return data['email']

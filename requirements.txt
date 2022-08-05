@@ -1,5 +1,3 @@
-bottle
-gunicorn
 Flask
 Flask-Cors
 PyJWT

@@ -6,7 +6,7 @@ from Core.SMTP import SMTP
 from Core.Login import Login
 from Core.Register import Register
 from Database.Users import Users
-from Utils.JWT import token_required, validate_token
+from Utils.JWT import token_required, get_payload
 
 app = Flask(__name__)
 CORS(app)
@@ -130,14 +130,17 @@ def login():
 def register():
     _register = Register()
     return jsonify(
-        {"message": _register.register_user(request.json['email'], request.json['pass'], request.json['fname'])})
+        {"message": _register.register_user(request.json['email'], request.json['pass'], request.json['name'])})
 
 
-@app.route('/api/validate', methods=['GET'])
-def validate():
+@app.route('/api/payload', methods=['GET'])
+def payload():
     token = request.headers['Authorization']
     token = token.replace("Bearer ", "")
-    return validate_token(token)
+    email = get_payload(token)
+    u = Users()
+    name = u.get_user(email)
+    return jsonify({'name': name[0][0], 'email': email})
 
 
 if __name__ == '__main__':

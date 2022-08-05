@@ -12,6 +12,5 @@ class Users:
             users_dict.append({"name": user[0], "email": user[1]})
         return users_dict
 
-
-u = Users()
-u.get_users()
+    def get_user(self, email):
+        return self.dao.get_user(email)
