@@ -1,6 +1,5 @@
 import datetime
 import imaplib
-import locale
 import smtplib
 import time
 from email.mime.multipart import MIMEMultipart
@@ -17,7 +16,7 @@ class SMTP:
         msg['From'] = from_email
         msg['To'] = ", ".join(to_emails)
         msg['Subject'] = subject
-        msg['Date'] = datetime.datetime.now()
+        msg['Date'] = str(datetime.datetime.now())
 
         txt_part = MIMEText(text, 'utf-8')
         msg.attach(txt_part)
