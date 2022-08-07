@@ -17,7 +17,7 @@ class SMTP:
         msg['From'] = from_email
         msg['To'] = ", ".join(to_emails)
         msg['Subject'] = subject
-        msg['Date'] = datetime.date.today()
+        msg['Date'] = datetime.datetime.now()
 
         txt_part = MIMEText(text, 'utf-8')
         msg.attach(txt_part)
