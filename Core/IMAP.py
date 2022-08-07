@@ -1,5 +1,5 @@
-import imaplib
 import email
+import imaplib
 
 from Config.Config import HOST, IMAP_PORT
 from Database.Connection import DAO

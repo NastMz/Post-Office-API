@@ -1,9 +1,7 @@
-import base64
-import binascii
-import hashlib
 import re
 
 from Database.Connection import DAO
+
 
 class Register:
     def __init__(self):
@@ -19,7 +17,7 @@ class Register:
         else:
             return True, message
 
-    def validate_user_info(self, new_email,new_password, new_fname):
+    def validate_user_info(self, new_email, new_password, new_fname):
         message = []
         validate_email = re.match('\w+', new_email, re.I)
         validate_pass = re.match('\w+', new_password, re.I)
@@ -48,5 +46,3 @@ class Register:
             else:
                 message.append('El correo ya se encuentra registrado.')
         return message
-
-

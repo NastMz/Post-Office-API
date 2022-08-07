@@ -3,8 +3,9 @@ import imaplib
 import locale
 import smtplib
 import time
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 from Config.Config import HOST, SMTP_PORT, IMAP_PORT
 
 
@@ -16,7 +17,7 @@ class SMTP:
         msg['From'] = from_email
         msg['To'] = ", ".join(to_emails)
         msg['Subject'] = subject
-        locale.setlocale(locale.LC_ALL, 'es-ES')
+        locale.setlocale(locale.LC_ALL, locale.locale_alias['es_co'])
         msg['Date'] = datetime.date.today().strftime("%A, %d de %B de %Y")
 
         txt_part = MIMEText(text, 'utf-8')
@@ -38,5 +39,6 @@ class SMTP:
         # save sent email
         mail = imaplib.IMAP4(host=HOST, port=IMAP_PORT)
         mail.login(from_email, password)
-        mail.append(mailbox='INBOX', flags='Sent', date_time=imaplib.Time2Internaldate(time.time()), message=msg_str.encode('utf8'))
+        mail.append(mailbox='INBOX', flags='Sent', date_time=imaplib.Time2Internaldate(time.time()),
+                    message=msg_str.encode('utf8'))
         mail.logout()

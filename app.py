@@ -2,9 +2,9 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from Core.IMAP import IMAP
-from Core.SMTP import SMTP
 from Core.Login import Login
 from Core.Register import Register
+from Core.SMTP import SMTP
 from Database.Users import Users
 from Utils.JWT import token_required, get_payload
 
