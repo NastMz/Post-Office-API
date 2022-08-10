@@ -30,7 +30,7 @@ def inbox(data):
 def send(data):
     dao = DAO()
     exist_mail = dao.get_email(request.json['to'])
-    if not exist_mail:
+    if exist_mail:
         smtp = SMTP()
         new_email = {
             "from": data['email'],
