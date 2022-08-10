@@ -5,6 +5,7 @@ from Core.IMAP import IMAP
 from Core.Login import Login
 from Core.Register import Register
 from Core.SMTP import SMTP
+from Database.Connection import DAO
 from Database.Users import Users
 from Utils.JWT import token_required, get_payload
 
@@ -27,20 +28,25 @@ def inbox(data):
 @app.route('/api/send', methods=['POST'])
 @token_required
 def send(data):
-    smtp = SMTP()
-    new_email = {
-        "from": data['email'],
-        "to": request.json['to'],
-        "subject": request.json['subject'],
-        "text": request.json['text'],
-        "pass": data['pass']
-    }
-    smtp.send_email(text=new_email['text'],
-                    subject=new_email['subject'],
-                    from_email=new_email['from'],
-                    to_emails=[new_email['to']],
-                    password=new_email['pass'])
-    return jsonify({"message": "Email sent successfully!"})
+    dao = DAO()
+    exist_mail = dao.get_email(request.json['to'])
+    if not exist_mail:
+        smtp = SMTP()
+        new_email = {
+            "from": data['email'],
+            "to": request.json['to'],
+            "subject": request.json['subject'],
+            "text": request.json['text'],
+            "pass": data['pass']
+        }
+        smtp.send_email(text=new_email['text'],
+                        subject=new_email['subject'],
+                        from_email=new_email['from'],
+                        to_emails=[new_email['to']],
+                        password=new_email['pass'])
+        return jsonify({"message": "Email sent successfully!"})
+    else:
+        return jsonify({"message": "Email does not exist!"})
 
 
 @app.route('/api/delete', methods=['DELETE'])
