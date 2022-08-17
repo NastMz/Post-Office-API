@@ -18,7 +18,7 @@ class SMTP:
         msg['Subject'] = subject
         msg['Date'] = str(datetime.datetime.now())
 
-        txt_part = MIMEText(text, 'utf-8')
+        txt_part = MIMEText(text, 'plain')
         msg.attach(txt_part)
 
         if html is not None:
