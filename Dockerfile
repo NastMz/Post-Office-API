@@ -1,15 +1,21 @@
-FROM python:3.10-alpine
+FROM python:3.13-slim
 
-WORKDIR /post-office-api
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
 
-ENV FLASK_APP app.py
-
-ENV FLASK_RUN_HOST 0.0.0.0
-
-COPY requirements.txt requirements.txt
-
+WORKDIR /app
+COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY . .
+COPY postoffice_api ./postoffice_api
+COPY wsgi.py docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh \
+ && useradd --system --create-home --uid 10001 postoffice
+USER postoffice
 
-CMD ["flask", "run"]
+EXPOSE 8000
+HEALTHCHECK --interval=10s --timeout=3s --retries=10 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"
+
+ENTRYPOINT ["./docker-entrypoint.sh"]

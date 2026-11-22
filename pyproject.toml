@@ -1,0 +1,24 @@
+[project]
+name = "postoffice-api"
+version = "1.0.0"
+description = "REST gateway over SMTP/IMAP for the Post Office lab mail system"
+requires-python = ">=3.12"
+license = "MIT"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -m \"not integration\""
+markers = [
+    "integration: needs the docker compose stack running (deselected by default)",
+]
+
+[tool.coverage.run]
+source = ["postoffice_api"]
+omit = ["postoffice_api/seed.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
