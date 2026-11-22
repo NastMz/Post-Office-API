@@ -7,6 +7,7 @@ from typing import Annotated, Literal
 
 from flask import Request
 from pydantic import (
+    AfterValidator,
     BaseModel,
     BeforeValidator,
     ConfigDict,
@@ -21,6 +22,44 @@ from postoffice_api.errors import ApiError
 LOCAL_PART_RE = re.compile(r"^[a-z0-9](?:[a-z0-9._-]{0,30}[a-z0-9])?$")
 ADDRESS_RE = re.compile(r"^[a-z0-9](?:[a-z0-9._-]{0,30}[a-z0-9])?@[a-z0-9.-]+\.[a-z]{2,}$")
 
+MAX_ADDRESS_LENGTH = 254  # RFC 5321 path limit
+# Local parts that belong to the system or to well-known role accounts.
+RESERVED_LOCAL_PARTS = frozenset(
+    {
+        "abuse",
+        "admin",
+        "administrator",
+        "api",
+        "hostmaster",
+        "mailer-daemon",
+        "noc",
+        "no-reply",
+        "noreply",
+        "postmaster",
+        "root",
+        "security",
+        "support",
+        "webmaster",
+    }
+)
+_CONTROL_RE = re.compile(r"[\x00-\x1f\x7f]")
+_BODY_CONTROL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+
+
+def _single_line(value: str) -> str:
+    """Header-bound text (names, subjects) must not carry CR/LF or other controls."""
+    if _CONTROL_RE.search(value):
+        raise ValueError("must not contain line breaks or control characters")
+    return value
+
+
+def _clean_body(value: str) -> str:
+    if _BODY_CONTROL_RE.search(value):
+        raise ValueError("must not contain control characters")
+    return value
+
+
+SingleLine = AfterValidator(_single_line)
 Trimmed = Annotated[str, StringConstraints(strip_whitespace=True)]
 
 
@@ -28,14 +67,23 @@ class _Body(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+def _not_reserved(value: str) -> str:
+    if value in RESERVED_LOCAL_PARTS:
+        raise ValueError("this address is reserved")
+    return value
+
+
 class RegisterRequest(_Body):
-    name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=80)]
+    name: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=2, max_length=80), SingleLine
+    ]
     username: Annotated[
         str,
         BeforeValidator(lambda v: v.strip().lower() if isinstance(v, str) else v),
         StringConstraints(pattern=LOCAL_PART_RE.pattern),
+        AfterValidator(_not_reserved),
     ]
-    password: Annotated[str, Field(min_length=8)]
+    password: Annotated[str, Field(min_length=8, max_length=72)]
 
     @model_validator(mode="after")
     def _password_fits_bcrypt(self) -> RegisterRequest:
@@ -45,8 +93,13 @@ class RegisterRequest(_Body):
 
 
 class LoginRequest(_Body):
-    email: Annotated[str, StringConstraints(strip_whitespace=True, to_lower=True, min_length=1)]
-    password: Annotated[str, Field(min_length=1)]
+    email: Annotated[
+        str,
+        StringConstraints(
+            strip_whitespace=True, to_lower=True, min_length=1, max_length=MAX_ADDRESS_LENGTH
+        ),
+    ]
+    password: Annotated[str, Field(min_length=1, max_length=1024)]
 
 
 class MessageRef(_Body):
@@ -54,14 +107,19 @@ class MessageRef(_Body):
     uid: Annotated[int, Field(gt=0)]
 
 
-Recipient = Annotated[str, StringConstraints(strip_whitespace=True, to_lower=True, min_length=1)]
+Recipient = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True, to_lower=True, min_length=1, max_length=MAX_ADDRESS_LENGTH
+    ),
+]
 
 
 class DraftRequest(_Body):
     to: Annotated[list[Recipient], Field(max_length=20)] = []
     cc: Annotated[list[Recipient], Field(max_length=20)] = []
-    subject: Annotated[Trimmed, Field(max_length=200)] = ""
-    body: Annotated[str, Field(max_length=50_000)] = ""
+    subject: Annotated[Trimmed, Field(max_length=200), SingleLine] = ""
+    body: Annotated[str, Field(max_length=50_000), AfterValidator(_clean_body)] = ""
     reply_to: MessageRef | None = None
     draft_uid: Annotated[int, Field(gt=0)] | None = None
 

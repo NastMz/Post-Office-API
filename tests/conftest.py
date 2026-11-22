@@ -4,6 +4,7 @@ import pytest
 
 from postoffice_api.app import build_services, create_app
 from postoffice_api.config import Settings
+from postoffice_api.ratelimit import limiter
 from postoffice_api.security import PasswordHasher
 from tests.fakes import FakeStoreFactory, FakeTransport, FakeUserRepository
 
@@ -42,6 +43,7 @@ def services(settings, users, stores, transport):
 def app(settings, services):
     app = create_app(settings, services)
     app.config["TESTING"] = True
+    limiter.reset()  # in-memory counters are shared between test apps
     return app
 
 

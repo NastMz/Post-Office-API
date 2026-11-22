@@ -34,21 +34,33 @@ cd Post-Office-API
 docker compose up --build
 ```
 
-| Servicio                | URL / puerto                  |
-| ----------------------- | ----------------------------- |
-| Cliente web             | http://localhost:8150         |
-| API REST                | http://localhost:8151/api     |
-| SMTP submission (587)   | `localhost:8152`              |
-| IMAP (143)              | `localhost:8153`              |
-| SMTP entre servidores (25) | `localhost:8154`           |
+| Servicio              | URL / puerto              |
+| --------------------- | ------------------------- |
+| Cliente web           | http://localhost:8150     |
+| API REST              | http://localhost:8151/api |
+| SMTP submission (587) | `localhost:8152`          |
+| IMAP (143)            | `localhost:8153`          |
+
+Todos los puertos se publican solo en `127.0.0.1`. El puerto 25 (SMTP entre servidores, MTA a MTA)
+no se publica: solo existe dentro de la red de Docker, así nadie puede inyectar correo sin
+autenticarse desde fuera.
 
 Cuentas de demostración (contraseña `postoffice`): `ana`, `bruno`, `carla` y `diego`
 (`@postoffice.test`). Si el frontend está en otra ruta: `POSTOFFICE_WEB_PATH=/ruta/al/frontend docker compose up`.
 
 Para parar y borrar los datos: `docker compose down -v`.
 
-Los valores por defecto del `docker-compose.yml` son **solo para desarrollo**. Para cambiarlos,
-copie `.env.example` a `.env`.
+### Secretos y modo desarrollo
+
+Los secretos por defecto del `docker-compose.yml` son públicos y **solo sirven para desarrollo**.
+El compose define `APP_ENV=development`; sin esa variable la API se niega a arrancar si
+`JWT_SECRET` o `MAIL_MASTER_PASSWORD` conservan esos valores conocidos. Para cualquier otro uso:
+
+```bash
+cp .env.example .env      # APP_ENV=production
+# reemplace cada valor, por ejemplo con: openssl rand -hex 32
+docker compose up --build
+```
 
 ### Usar un cliente de correo real
 
@@ -87,6 +99,20 @@ Verá las mismas carpetas y mensajes que en la web.
 El laboratorio es una red cerrada: la entrega a dominios externos está desactivada y la API solo
 acepta destinatarios `@postoffice.test`.
 
+## Seguridad
+
+- Contraseñas con bcrypt; los usuarios inexistentes también pasan por una verificación bcrypt para
+  no revelar su existencia por el tiempo de respuesta.
+- JWT HS256 con secreto de al menos 32 caracteres y vigencia de 8 horas, sin datos sensibles.
+- Límite de 10 intentos por minuto y por IP en inicio de sesión y registro (`429`, configurable con
+  `AUTH_RATE_LIMIT`). Solo el contenedor `web` puede indicar la IP real con `X-Forwarded-For`. Los
+  contadores viven en memoria del proceso, suficiente para el laboratorio.
+- Cuerpos de petición de máximo 256 KB (`413`), direcciones de máximo 254 caracteres y rechazo de
+  saltos de línea o caracteres de control en nombres y asuntos (evita inyectar cabeceras).
+- Direcciones reservadas (`postmaster`, `abuse`, `root`, `admin`, `api`, `mailer-daemon`,
+  `noreply`…) no se pueden registrar.
+- Consultas SQL parametrizadas y un usuario de base de datos de solo lectura para Postfix y Dovecot.
+
 ## API
 
 Todas las rutas, excepto `auth/register`, `auth/login` y `health`, requieren
@@ -94,7 +120,7 @@ Todas las rutas, excepto `auth/register`, `auth/login` y `health`, requieren
 
 | Método   | Ruta                                       | Descripción                                    |
 | -------- | ------------------------------------------ | ---------------------------------------------- |
-| `POST`   | `/api/auth/register`                       | `{name, username, password}` → `201`           |
+| `POST`   | `/api/auth/register`                       | `{name, username, password}` → `201`, `429` si se excede el límite |
 | `POST`   | `/api/auth/login`                          | `{email, password}` → `{token, user}`          |
 | `GET`    | `/api/auth/me`                             | Usuario de la sesión                           |
 | `GET`    | `/api/users`                               | Directorio para autocompletar destinatarios    |
@@ -121,7 +147,7 @@ misma forma:
 ```bash
 py -3.13 -m venv .venv            # o python3 -m venv .venv
 .venv/Scripts/pip install -r requirements-dev.txt   # .venv/bin/pip en Linux/macOS
-.venv/Scripts/python -m pytest --cov               # 56 pruebas unitarias
+.venv/Scripts/python -m pytest --cov               # 77 pruebas unitarias
 .venv/Scripts/ruff check . && .venv/Scripts/ruff format --check .
 ```
 

@@ -8,6 +8,7 @@ from functools import wraps
 from flask import Blueprint, current_app, g, jsonify, request
 
 from postoffice_api.errors import unauthorized
+from postoffice_api.ratelimit import limiter
 from postoffice_api.schemas import LoginRequest, RegisterRequest, parse_body
 from postoffice_api.services import AuthService
 
@@ -31,7 +32,12 @@ def login_required(view: Callable) -> Callable:
     return wrapper
 
 
+def _auth_limit() -> str:
+    return current_app.config["AUTH_RATE_LIMIT"]
+
+
 @bp.post("/register")
+@limiter.limit(_auth_limit)
 def register():
     body = parse_body(RegisterRequest, request)
     user = auth_service().register(body.name, body.username, body.password)
@@ -39,6 +45,7 @@ def register():
 
 
 @bp.post("/login")
+@limiter.limit(_auth_limit)
 def login():
     body = parse_body(LoginRequest, request)
     token, user = auth_service().login(body.email, body.password)

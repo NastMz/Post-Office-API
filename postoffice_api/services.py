@@ -66,7 +66,9 @@ class AuthService:
     def login(self, email: str, password: str) -> tuple[str, User]:
         address = email if "@" in email else f"{email}@{self._domain}"
         user = self._users.get(address)
-        if user is None or not self._hasher.verify(password, user.password_hash):
+        # Unknown users still pay for one bcrypt check so timing does not reveal them.
+        stored = user.password_hash if user else self._hasher.dummy_hash
+        if not self._hasher.verify(password, stored) or user is None:
             raise ApiError(401, "invalid_credentials", "Wrong address or password")
         return self._tokens.issue(user.email), user
 

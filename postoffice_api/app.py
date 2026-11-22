@@ -11,6 +11,7 @@ from postoffice_api.config import Settings
 from postoffice_api.errors import register_error_handlers
 from postoffice_api.mail.imap_store import ImapStoreFactory
 from postoffice_api.mail.smtp_transport import SmtpTransport
+from postoffice_api.ratelimit import TrustedProxies, limiter
 from postoffice_api.routes import auth, mail
 from postoffice_api.security import PasswordHasher, TokenService
 from postoffice_api.services import AuthService, MailService, MailStoreFactory, Transport
@@ -55,6 +56,10 @@ def create_app(settings: Settings | None = None, services: Services | None = Non
     app.json.ensure_ascii = False
     app.extensions["postoffice"] = services or build_services(settings)
     app.config["MAIL_DOMAIN"] = settings.mail_domain
+    app.config["MAX_CONTENT_LENGTH"] = settings.max_body_bytes
+    app.config["AUTH_RATE_LIMIT"] = settings.auth_rate_limit
+    app.extensions["postoffice_proxies"] = TrustedProxies(settings.trusted_proxies)
+    limiter.init_app(app)
     if settings.cors_origins:
         CORS(app, resources={r"/api/*": {"origins": list(settings.cors_origins)}})
 

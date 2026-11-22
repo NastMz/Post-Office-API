@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import secrets
 from datetime import UTC, datetime, timedelta
 
 import bcrypt
@@ -16,6 +17,14 @@ SCHEME_PREFIX = "{BLF-CRYPT}"
 class PasswordHasher:
     def __init__(self, rounds: int = 12) -> None:
         self._rounds = rounds
+        self._dummy: str | None = None
+
+    @property
+    def dummy_hash(self) -> str:
+        """A valid hash of a random value, used to equalise login timing."""
+        if self._dummy is None:
+            self._dummy = self.hash(secrets.token_urlsafe(16))
+        return self._dummy
 
     def hash(self, password: str) -> str:
         digest = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(self._rounds))

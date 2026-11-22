@@ -1,7 +1,10 @@
-# Post Office: complete lab mail system.
+# Post Office: complete lab mail system (development defaults).
 #   docker compose up --build
 # Web client http://localhost:8150 · API http://localhost:8151
 # Real mail clients: SMTP submission localhost:8152, IMAP localhost:8153.
+# Every port is bound to 127.0.0.1 only. Port 25 (MTA-to-MTA SMTP) stays
+# inside the Docker network. The secrets below are public development
+# defaults: override them in .env (see .env.example) and drop APP_ENV.
 name: postoffice
 
 x-db-env: &db-env
@@ -42,9 +45,8 @@ services:
     volumes:
       - mail-data:/var/mail/vhosts
     ports:
-      - "8152:587"
-      - "8153:143"
-      - "8154:25"
+      - "127.0.0.1:8152:587"
+      - "127.0.0.1:8153:143"
     depends_on:
       db:
         condition: service_healthy
@@ -66,9 +68,14 @@ services:
       MAIL_MASTER_PASSWORD: ${MAIL_MASTER_PASSWORD:-master-dev}
       JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-in-production}
       SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+      # Allows the public development secrets above; the API refuses them otherwise.
+      APP_ENV: ${APP_ENV:-development}
+      # Only the web container may supply X-Forwarded-For (used for rate limiting).
+      TRUSTED_PROXIES: web
+      AUTH_RATE_LIMIT: ${AUTH_RATE_LIMIT:-10 per minute}
       CORS_ORIGINS: http://localhost:8150,http://localhost:5173
     ports:
-      - "8151:8000"
+      - "127.0.0.1:8151:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -81,7 +88,7 @@ services:
     image: postoffice-web:1.0.0
     container_name: postoffice-web
     ports:
-      - "8150:80"
+      - "127.0.0.1:8150:80"
     depends_on:
       - api
     networks: [mailnet]
