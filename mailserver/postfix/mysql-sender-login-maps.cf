@@ -1,0 +1,5 @@
+user = mailserver
+password = ${MAILSERVER_DB_PASSWORD}
+hosts = ${DB_HOST}
+dbname = ${DB_NAME}
+query = SELECT email FROM users WHERE email = '%s'

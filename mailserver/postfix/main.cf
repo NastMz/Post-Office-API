@@ -1,0 +1,30 @@
+# --- Identity --------------------------------------------------------------
+myhostname = mail.${MAIL_DOMAIN}
+mydomain = ${MAIL_DOMAIN}
+myorigin = $mydomain
+mydestination = localhost
+inet_interfaces = all
+inet_protocols = ipv4
+compatibility_level = 3.6
+maillog_file = /dev/stdout
+smtpd_banner = $myhostname ESMTP Post Office
+
+# --- Virtual mailboxes (MariaDB) delivered to Dovecot over LMTP --------------
+virtual_mailbox_domains = ${MAIL_DOMAIN}
+virtual_mailbox_maps = proxy:mysql:/etc/postfix/mysql-virtual-mailbox-maps.cf
+virtual_transport = lmtp:unix:private/dovecot-lmtp
+
+# This is a closed teaching network: never try to reach the public Internet.
+default_transport = error:external delivery is disabled in the Post Office lab
+relay_transport = error:external delivery is disabled in the Post Office lab
+
+# --- SASL authentication delegated to Dovecot --------------------------------
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+smtpd_sasl_auth_enable = no
+smtpd_sender_login_maps = proxy:mysql:/etc/postfix/mysql-sender-login-maps.cf
+
+# Port 25 only accepts mail addressed to local mailboxes.
+smtpd_relay_restrictions = permit_sasl_authenticated, reject_unauth_destination
+smtpd_recipient_restrictions = reject_unlisted_recipient
+message_size_limit = 10240000
