@@ -1,7 +1,97 @@
-version: '3'
+# Post Office: complete lab mail system.
+#   docker compose up --build
+# Web client http://localhost:8150 · API http://localhost:8151
+# Real mail clients: SMTP submission localhost:8152, IMAP localhost:8153.
+name: postoffice
+
+x-db-env: &db-env
+  DB_HOST: db
+  DB_NAME: postoffice
 
 services:
-  post-office-api:
-    build: .
+  db:
+    image: mariadb:11.4.4
+    container_name: postoffice-db
+    environment:
+      MARIADB_DATABASE: postoffice
+      MARIADB_USER: postoffice
+      MARIADB_PASSWORD: ${DB_PASSWORD:-postoffice-dev}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-postoffice-root-dev}
+      MAILSERVER_DB_PASSWORD: ${MAILSERVER_DB_PASSWORD:-mailserver-dev}
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks: [mailnet]
+
+  mail:
+    build: ./mailserver
+    image: postoffice-mail:1.0.0
+    container_name: postoffice-mail
+    hostname: mail.postoffice.test
+    environment:
+      <<: *db-env
+      MAIL_DOMAIN: ${MAIL_DOMAIN:-postoffice.test}
+      MAILSERVER_DB_PASSWORD: ${MAILSERVER_DB_PASSWORD:-mailserver-dev}
+      MASTER_USER: api
+      MASTER_PASSWORD: ${MAIL_MASTER_PASSWORD:-master-dev}
+    volumes:
+      - mail-data:/var/mail/vhosts
     ports:
-      - "5000:5000"
+      - "8152:587"
+      - "8153:143"
+      - "8154:25"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [mailnet]
+
+  api:
+    build: .
+    image: postoffice-api:1.0.0
+    container_name: postoffice-api
+    environment:
+      <<: *db-env
+      DB_USER: postoffice
+      DB_PASSWORD: ${DB_PASSWORD:-postoffice-dev}
+      MAIL_DOMAIN: ${MAIL_DOMAIN:-postoffice.test}
+      MAIL_HOST: mail
+      IMAP_PORT: "143"
+      SMTP_PORT: "587"
+      MAIL_MASTER_USER: api
+      MAIL_MASTER_PASSWORD: ${MAIL_MASTER_PASSWORD:-master-dev}
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-in-production}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+      CORS_ORIGINS: http://localhost:8150,http://localhost:5173
+    ports:
+      - "8151:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      mail:
+        condition: service_healthy
+    networks: [mailnet]
+
+  web:
+    build: ${POSTOFFICE_WEB_PATH:-../Post-Office}
+    image: postoffice-web:1.0.0
+    container_name: postoffice-web
+    ports:
+      - "8150:80"
+    depends_on:
+      - api
+    networks: [mailnet]
+
+volumes:
+  db-data:
+    name: postoffice-db-data
+  mail-data:
+    name: postoffice-mail-data
+
+networks:
+  mailnet:
+    name: postoffice-net
